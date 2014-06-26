@@ -88,7 +88,7 @@ angular.module('quickstart.controllers', [])
           $scope.override = function() {
             console.log(contact);
             contact.version = e.data.version;
-            contacts.update(contact, self.onSuccess, self.onFailure);
+            contacts.update(contact, onSuccess, onFailure);
           }          
         });
       }
