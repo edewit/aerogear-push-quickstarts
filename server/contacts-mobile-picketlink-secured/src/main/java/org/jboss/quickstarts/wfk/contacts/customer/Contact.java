@@ -31,6 +31,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
+import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import javax.validation.constraints.Pattern;
@@ -78,6 +79,9 @@ public class Contact implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
     private Long id;
+
+    @Version
+    private long version;
 
     @NotNull
     @Size(min = 1, max = 25)
@@ -152,5 +156,9 @@ public class Contact implements Serializable {
 
     public void setBirthDate(Date birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public long getVersion() {
+        return version;
     }
 }

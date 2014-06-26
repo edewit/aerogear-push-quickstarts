@@ -20,6 +20,7 @@ import org.jboss.quickstarts.wfk.contacts.security.authorization.UserLoggedIn;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.OptimisticLockException;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
@@ -168,56 +169,56 @@ public class ContactRESTService {
     @PUT
     @Path("/{id:[0-9][0-9]*}")
     public Response updateContact(@PathParam("id") long id, Contact contact) {
-        return Response.status(Response.Status.CONFLICT).entity(contact).build();
+        if (contact == null) {
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+        log.info("updateContact started. Contact = " + contact.getFirstName() + " " + contact.getLastName() + " " + contact.getEmail() + " " + contact.getPhoneNumber() + " "
+                + contact.getBirthDate() + " " + contact.getId());
 
-//        if (contact == null) {
-//            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-//        }
-//        log.info("updateContact started. Contact = " + contact.getFirstName() + " " + contact.getLastName() + " " + contact.getEmail() + " " + contact.getPhoneNumber() + " "
-//                + contact.getBirthDate() + " " + contact.getId());
-//
-//        if (contact.getId() != id) {
-//            // The client attempted to update the read-only Id. This is not permitted.
-//            Response response = Response.status(Response.Status.CONFLICT).entity("The contact ID cannot be modified").build();
-//            throw new WebApplicationException(response);
-//        }
-//        if (service.findById(contact.getId()) == null) {
-//            // Verify if the contact exists. Return 404, if not present.
-//            throw new WebApplicationException(Response.Status.NOT_FOUND);
-//        }
-//
-//        Response.ResponseBuilder builder = null;
-//
-//        try {
-//            // Apply the changes the Contact.
-//            service.update(contact);
-//
-//            // Create an OK Response and pass the contact back in case it is needed.
-//            builder = Response.ok(contact);
-//
-//            log.info("updateContact completed. Contact = " + contact.getFirstName() + " " + contact.getLastName() + " " + contact.getEmail() + " " + contact.getPhoneNumber() + " "
-//                + contact.getBirthDate() + " " + contact.getId());
-//        } catch (ConstraintViolationException ce) {
-//            log.info("ConstraintViolationException - " + ce.toString());
-//            // Handle bean validation issues
-//            builder = createViolationResponse(ce.getConstraintViolations());
-//        } catch (ValidationException e) {
-//            log.info("ValidationException - " + e.toString());
-//            // Handle the unique constrain violation
-//            Map<String, String> responseObj = new HashMap<String, String>();
-//            responseObj.put("email", "That email is already used, please use a unique email");
-//            responseObj.put("error", "This is where errors are displayed that are not related to a specific field");
-//            responseObj.put("anotherError", "You can find this error message in /src/main/java/org/jboss/quickstarts/wfk/rest/ContactRESTService.java line 242.");
-//            builder = Response.status(Response.Status.CONFLICT).entity(responseObj);
-//        } catch (Exception e) {
-//            log.info("Exception - " + e.toString());
-//            // Handle generic exceptions
-//            Map<String, String> responseObj = new HashMap<String, String>();
-//            responseObj.put("error", e.getMessage());
-//            builder = Response.status(Response.Status.BAD_REQUEST).entity(responseObj);
-//        }
-//
-//        return builder.build();
+        if (contact.getId() != id) {
+            // The client attempted to update the read-only Id. This is not permitted.
+            Response response = Response.status(Response.Status.CONFLICT).entity("The contact ID cannot be modified").build();
+            throw new WebApplicationException(response);
+        }
+        if (service.findById(contact.getId()) == null) {
+            // Verify if the contact exists. Return 404, if not present.
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        Response.ResponseBuilder builder = null;
+
+        try {
+            // Apply the changes the Contact.
+            service.update(contact);
+
+            // Create an OK Response and pass the contact back in case it is needed.
+            builder = Response.ok(contact);
+
+            log.info("updateContact completed. Contact = " + contact.getFirstName() + " " + contact.getLastName() + " " + contact.getEmail() + " " + contact.getPhoneNumber() + " "
+                + contact.getBirthDate() + " " + contact.getId());
+        } catch (ConstraintViolationException ce) {
+            log.info("ConstraintViolationException - " + ce.toString());
+            // Handle bean validation issues
+            builder = createViolationResponse(ce.getConstraintViolations());
+        } catch (ValidationException e) {
+            log.info("ValidationException - " + e.toString());
+            // Handle the unique constrain violation
+            Map<String, String> responseObj = new HashMap<String, String>();
+            responseObj.put("email", "That email is already used, please use a unique email");
+            responseObj.put("error", "This is where errors are displayed that are not related to a specific field");
+            responseObj.put("anotherError", "You can find this error message in /src/main/java/org/jboss/quickstarts/wfk/rest/ContactRESTService.java line 242.");
+            builder = Response.status(Response.Status.CONFLICT).entity(responseObj);
+        } catch (OptimisticLockException e) {
+            builder = Response.status(Response.Status.CONFLICT).entity(e.getEntity());
+        } catch (Exception e) {
+            log.info("Exception - " + e.toString());
+            // Handle generic exceptions
+            Map<String, String> responseObj = new HashMap<String, String>();
+            responseObj.put("error", e.getMessage());
+            builder = Response.status(Response.Status.BAD_REQUEST).entity(responseObj);
+        }
+
+        return builder.build();
     }
 
     /**
