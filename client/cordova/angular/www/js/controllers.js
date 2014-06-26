@@ -58,8 +58,6 @@ angular.module('quickstart.controllers', [])
     });
   }
   $scope.save = function (contact) {
-    console.log(contact);
-    var self = this;
     if ($stateParams.id) {
       contacts.update(contact, onSuccess, onFailure);
     } else {
@@ -69,7 +67,7 @@ angular.module('quickstart.controllers', [])
     function onSuccess() {
       $location.url('/app/contacts');
     }
-    
+
     function onFailure(e) {
       if (e.status === 409) {
         $ionicModal.fromTemplateUrl('templates/diff.html', {
@@ -79,16 +77,18 @@ angular.module('quickstart.controllers', [])
           $scope.data = JSON.stringify(e.data, null, 4);
           $scope.model = angular.toJson(contact, 4);
           modal.show();
-          
+
           $scope.cancel = function() {
             modal.hide();
             $location.url('/app/contacts/');
-          }
+          };
 
           $scope.override = function() {
-            console.log(contact);
             contact.version = e.data.version;
-            contacts.update(contact, onSuccess, onFailure);
+            contacts.update(contact, function() {
+              modal.hide();
+              onSuccess();
+            }, onFailure);
           }          
         });
       }
